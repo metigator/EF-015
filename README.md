@@ -168,9 +168,6 @@ SELECT	'Return Value' = @return_value
 GO
 
 ```
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/1f1ab081-857b-4e7f-a7f7-1d6195e2a279)
-</div>
 
 ##### + Function InstructorAvailable
 
