@@ -1,43 +1,51 @@
 USE [master]
-GO 
+GO
+/****** Object:  Database [EF015]    Script Date: 2023-08-06 2:58:50 PM ******/
 CREATE DATABASE [EF015];
 GO
-USE [EF015];
+USE [EF015]
 GO
-CREATE FUNCTION [dbo].[fn_HoursLeftForSection](@SectionId INT)
-RETURNS FLOAT
+/****** Object:  UserDefinedFunction [dbo].[fn_HoursLeftForSection]    Script Date: 2023-08-06 2:58:50 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE FUNCTION [dbo].[fn_InstructorAvailability](
+    @InstructorId INT,
+    @StartDate DATE,
+    @EndDate DATE,
+    @StartTime TIME,
+    @EndTime TIME
+)
+RETURNS NVARCHAR(50)
 AS
 BEGIN
-    -- Declare variable to store the result
-    DECLARE @HoursLeft FLOAT
+    DECLARE @Result NVARCHAR(50)
 
-    -- Calculate total hours per week based on schedule and session length
-    ;WITH WeeklyHours AS (
-        SELECT
-            S.Id AS SectionId,
-            C.HoursToComplete - (DATEDIFF(MINUTE, S.StartTime, S.EndTime)/60.0) * 
-                CASE 
-                    WHEN SC.ScheduleType = 'Daily' THEN 7
-                    WHEN SC.ScheduleType = 'DayAfterDay' THEN 3
-                    WHEN SC.ScheduleType = 'TwiceAWeek' THEN 2
-                    WHEN SC.ScheduleType = 'Weekend' THEN 2
-                    WHEN SC.ScheduleType = 'Compact' THEN 7
-                    ELSE 0
-                END AS HoursLeftForSection
-        FROM Sections S
-        JOIN Courses C ON S.CourseId = C.Id
-        JOIN Schedules SC ON S.ScheduleId = SC.Id
-        WHERE S.Id = @SectionId
+    IF EXISTS(
+        SELECT 1
+        FROM Sections
+        WHERE InstructorId = @InstructorId
+        AND (
+            (StartDate BETWEEN @StartDate AND @EndDate) OR
+            (EndDate BETWEEN @StartDate AND @EndDate) OR
+            (StartDate <= @StartDate AND EndDate >= @EndDate)
+        )
+        AND (
+            (StartTime BETWEEN @StartTime AND @EndTime) OR
+            (EndTime BETWEEN @StartTime AND @EndTime) OR
+            (StartTime <= @StartTime AND EndTime >= @EndTime)
+        )
     )
+        SET @Result = 'Unavailable'
+    ELSE
+        SET @Result = 'Available'
 
-    -- Assign the hours left for the specific section to the variable
-    SELECT @HoursLeft = HoursLeftForSection FROM WeeklyHours WHERE SectionId = @SectionId
-
-    -- Return the result
-    RETURN @HoursLeft
-END;
+    RETURN @Result
+END
 GO
-/****** Object:  Table [dbo].[Coporates]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Coporates]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -52,7 +60,7 @@ CREATE TABLE [dbo].[Coporates](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Courses]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Courses]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -68,7 +76,7 @@ CREATE TABLE [dbo].[Courses](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Enrollments]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Enrollments]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -83,7 +91,7 @@ CREATE TABLE [dbo].[Enrollments](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Individuals]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Individuals]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -99,7 +107,7 @@ CREATE TABLE [dbo].[Individuals](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Instructors]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Instructors]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -115,7 +123,7 @@ CREATE TABLE [dbo].[Instructors](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Offices]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Offices]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -130,7 +138,7 @@ CREATE TABLE [dbo].[Offices](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Particpants]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Particpants]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -145,7 +153,7 @@ CREATE TABLE [dbo].[Particpants](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Schedules]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Schedules]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -166,7 +174,7 @@ CREATE TABLE [dbo].[Schedules](
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 GO
-/****** Object:  Table [dbo].[Sections]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Table [dbo].[Sections]    Script Date: 2023-08-06 2:58:50 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -14125,431 +14133,431 @@ INSERT [dbo].[Schedules] ([Id], [ScheduleType], [SUN], [MON], [TUE], [WED], [THU
 GO
 INSERT [dbo].[Schedules] ([Id], [ScheduleType], [SUN], [MON], [TUE], [WED], [THU], [FRI], [SAT]) VALUES (5, N'Compact', 1, 1, 1, 1, 1, 1, 1)
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (1, N'01A51C05', 1, 59, 2, CAST(N'2015-11-07' AS Date), CAST(N'2015-12-12' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (1, N'01A51C05', 1, 59, 2, CAST(N'2015-11-07' AS Date), CAST(N'2015-12-10' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (2, N'F9EA4ED5', 2, 33, 2, CAST(N'2015-06-09' AS Date), CAST(N'2015-07-21' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (2, N'F9EA4ED5', 2, 33, 2, CAST(N'2015-06-09' AS Date), CAST(N'2015-07-18' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (3, N'6217225C', 12, 48, 2, CAST(N'2023-07-15' AS Date), CAST(N'2023-08-05' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (3, N'6217225C', 12, 48, 2, CAST(N'2023-07-15' AS Date), CAST(N'2023-08-03' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (4, N'35BC2A10', 8, 34, 1, CAST(N'2023-07-08' AS Date), CAST(N'2023-08-05' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (4, N'35BC2A10', 8, 34, 1, CAST(N'2023-07-08' AS Date), CAST(N'2023-08-10' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (5, N'9BBE20BD', 2, 56, 1, CAST(N'2018-07-17' AS Date), CAST(N'2018-07-31' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (5, N'9BBE20BD', 2, 56, 1, CAST(N'2018-07-17' AS Date), CAST(N'2018-07-29' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (6, N'8FDECEA8', 3, 40, 3, CAST(N'2022-09-30' AS Date), CAST(N'2022-12-09' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (6, N'8FDECEA8', 3, 40, 3, CAST(N'2022-09-30' AS Date), CAST(N'2022-12-08' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (7, N'6E044672', 12, 24, 5, CAST(N'2016-07-28' AS Date), CAST(N'2016-09-01' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (7, N'6E044672', 12, 24, 5, CAST(N'2016-07-28' AS Date), CAST(N'2016-08-26' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (8, N'DE24DC42', 10, 9, 2, CAST(N'2022-05-28' AS Date), CAST(N'2022-06-18' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (8, N'DE24DC42', 10, 9, 2, CAST(N'2022-05-28' AS Date), CAST(N'2022-06-12' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (9, N'B57178E9', 11, 84, 3, CAST(N'2017-11-20' AS Date), CAST(N'2018-01-29' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (9, N'B57178E9', 11, 84, 3, CAST(N'2017-11-20' AS Date), CAST(N'2018-01-28' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (10, N'22A36799', 1, 87, 4, CAST(N'2021-01-01' AS Date), CAST(N'2021-02-19' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (10, N'22A36799', 1, 87, 4, CAST(N'2021-01-01' AS Date), CAST(N'2021-02-14' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (11, N'CD1B37DC', 3, 61, 2, CAST(N'2019-11-01' AS Date), CAST(N'2020-04-10' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (11, N'CD1B37DC', 3, 61, 2, CAST(N'2019-11-01' AS Date), CAST(N'2020-04-08' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (12, N'E35882CE', 12, 12, 4, CAST(N'2016-02-01' AS Date), CAST(N'2016-02-29' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (12, N'E35882CE', 12, 12, 4, CAST(N'2016-02-01' AS Date), CAST(N'2016-02-28' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (13, N'AA32CCEB', 4, 31, 3, CAST(N'2022-08-15' AS Date), CAST(N'2023-02-06' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (13, N'AA32CCEB', 4, 31, 3, CAST(N'2022-08-15' AS Date), CAST(N'2023-02-05' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (14, N'25F7CD4B', 10, 28, 1, CAST(N'2017-08-21' AS Date), CAST(N'2017-09-11' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (14, N'25F7CD4B', 10, 28, 1, CAST(N'2017-08-21' AS Date), CAST(N'2017-09-09' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (15, N'78539D1A', 4, 52, 1, CAST(N'2017-11-23' AS Date), CAST(N'2018-03-08' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (15, N'78539D1A', 4, 52, 1, CAST(N'2017-11-23' AS Date), CAST(N'2018-04-10' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (16, N'C7AD2DE8', 8, 81, 3, CAST(N'2023-04-07' AS Date), CAST(N'2023-07-07' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (16, N'C7AD2DE8', 8, 81, 3, CAST(N'2023-04-07' AS Date), CAST(N'2023-07-02' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (17, N'76F0EA91', 12, 3, 4, CAST(N'2015-08-28' AS Date), CAST(N'2015-10-02' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (17, N'76F0EA91', 12, 3, 4, CAST(N'2015-08-28' AS Date), CAST(N'2015-10-01' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (18, N'F4170F32', 10, 32, 3, CAST(N'2018-11-16' AS Date), CAST(N'2018-12-21' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (18, N'F4170F32', 10, 32, 3, CAST(N'2018-11-16' AS Date), CAST(N'2018-12-20' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (19, N'F04F591F', 6, 91, 1, CAST(N'2021-05-09' AS Date), CAST(N'2021-06-27' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (19, N'F04F591F', 6, 91, 1, CAST(N'2021-05-09' AS Date), CAST(N'2021-07-09' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (20, N'722A7A2E', 13, 12, 3, CAST(N'2016-07-03' AS Date), CAST(N'2016-11-20' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (20, N'722A7A2E', 13, 12, 3, CAST(N'2016-07-03' AS Date), CAST(N'2016-11-19' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (21, N'A8D6A8AA', 4, 67, 2, CAST(N'2021-10-26' AS Date), CAST(N'2022-02-08' AS Date), CAST(N'14:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (21, N'A8D6A8AA', 4, 67, 2, CAST(N'2021-10-26' AS Date), CAST(N'2022-02-02' AS Date), CAST(N'14:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (22, N'0D665A69', 11, 61, 2, CAST(N'2020-01-06' AS Date), CAST(N'2020-02-03' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (22, N'0D665A69', 11, 61, 2, CAST(N'2020-01-06' AS Date), CAST(N'2020-02-02' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (23, N'7A8810A3', 2, 96, 2, CAST(N'2019-01-05' AS Date), CAST(N'2019-02-16' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (23, N'7A8810A3', 2, 96, 2, CAST(N'2019-01-05' AS Date), CAST(N'2019-02-13' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (24, N'E8E270C0', 10, 3, 5, CAST(N'2016-04-20' AS Date), CAST(N'2016-05-11' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (24, N'E8E270C0', 10, 3, 5, CAST(N'2016-04-20' AS Date), CAST(N'2016-05-04' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (25, N'D0277EA2', 6, 66, 2, CAST(N'2021-02-12' AS Date), CAST(N'2021-05-14' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (25, N'D0277EA2', 6, 66, 2, CAST(N'2021-02-12' AS Date), CAST(N'2021-05-12' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (26, N'AAC1385D', 11, 65, 4, CAST(N'2016-08-07' AS Date), CAST(N'2016-12-25' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (26, N'AAC1385D', 11, 65, 4, CAST(N'2016-08-07' AS Date), CAST(N'2016-12-24' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (27, N'B2DDCF07', 10, 31, 4, CAST(N'2017-05-27' AS Date), CAST(N'2017-07-01' AS Date), CAST(N'11:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (27, N'B2DDCF07', 10, 31, 4, CAST(N'2017-05-27' AS Date), CAST(N'2017-06-30' AS Date), CAST(N'11:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (28, N'31D4975B', 11, 6, 3, CAST(N'2017-06-23' AS Date), CAST(N'2017-07-28' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (28, N'31D4975B', 11, 6, 3, CAST(N'2017-06-23' AS Date), CAST(N'2017-07-27' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (29, N'155EB45E', 6, 64, 1, CAST(N'2020-10-06' AS Date), CAST(N'2020-11-03' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (29, N'155EB45E', 6, 64, 1, CAST(N'2020-10-06' AS Date), CAST(N'2020-11-05' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (30, N'C359C5BE', 5, 67, 2, CAST(N'2018-09-05' AS Date), CAST(N'2018-09-26' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (30, N'C359C5BE', 5, 67, 2, CAST(N'2018-09-05' AS Date), CAST(N'2018-09-24' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (31, N'943A1415', 2, 57, 5, CAST(N'2018-03-18' AS Date), CAST(N'2018-04-08' AS Date), CAST(N'10:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (31, N'943A1415', 2, 57, 5, CAST(N'2018-03-18' AS Date), CAST(N'2018-04-06' AS Date), CAST(N'10:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (32, N'32592DFF', 8, 90, 3, CAST(N'2023-09-19' AS Date), CAST(N'2023-11-07' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (32, N'32592DFF', 8, 90, 3, CAST(N'2023-09-19' AS Date), CAST(N'2023-11-02' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (33, N'1429F282', 1, 16, 4, CAST(N'2017-09-24' AS Date), CAST(N'2017-12-24' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (33, N'1429F282', 1, 16, 4, CAST(N'2017-09-24' AS Date), CAST(N'2017-12-19' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (34, N'14921633', 1, 30, 1, CAST(N'2021-01-16' AS Date), CAST(N'2021-02-13' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (34, N'14921633', 1, 30, 1, CAST(N'2021-01-16' AS Date), CAST(N'2021-02-18' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (35, N'1FC2C687', 1, 92, 1, CAST(N'2018-05-07' AS Date), CAST(N'2018-05-21' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (35, N'1FC2C687', 1, 92, 1, CAST(N'2018-05-07' AS Date), CAST(N'2018-05-23' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (36, N'EF6839EF', 8, 35, 5, CAST(N'2015-06-15' AS Date), CAST(N'2015-06-29' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (36, N'EF6839EF', 8, 35, 5, CAST(N'2015-06-15' AS Date), CAST(N'2015-06-23' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (37, N'1AC50B3C', 13, 14, 1, CAST(N'2019-11-20' AS Date), CAST(N'2019-12-11' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (37, N'1AC50B3C', 13, 14, 1, CAST(N'2019-11-20' AS Date), CAST(N'2019-12-16' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (38, N'3869BDAF', 14, 68, 4, CAST(N'2023-05-18' AS Date), CAST(N'2023-07-06' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (38, N'3869BDAF', 14, 68, 4, CAST(N'2023-05-18' AS Date), CAST(N'2023-07-01' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (39, N'1F51AC4A', 14, 7, 1, CAST(N'2018-08-10' AS Date), CAST(N'2018-08-31' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (39, N'1F51AC4A', 14, 7, 1, CAST(N'2018-08-10' AS Date), CAST(N'2018-09-01' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (40, N'3AE7B8B7', 1, 78, 3, CAST(N'2016-05-30' AS Date), CAST(N'2016-07-18' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (40, N'3AE7B8B7', 1, 78, 3, CAST(N'2016-05-30' AS Date), CAST(N'2016-07-13' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (41, N'E3F02694', 2, 12, 2, CAST(N'2015-10-09' AS Date), CAST(N'2015-10-30' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (41, N'E3F02694', 2, 12, 2, CAST(N'2015-10-09' AS Date), CAST(N'2015-10-28' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (42, N'E736660B', 13, 4, 3, CAST(N'2016-04-28' AS Date), CAST(N'2017-02-02' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (42, N'E736660B', 13, 4, 3, CAST(N'2016-04-28' AS Date), CAST(N'2017-02-01' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (43, N'D7F5A957', 13, 70, 3, CAST(N'2018-07-02' AS Date), CAST(N'2018-11-19' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (43, N'D7F5A957', 13, 70, 3, CAST(N'2018-07-02' AS Date), CAST(N'2018-11-18' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (44, N'B726840B', 1, 51, 5, CAST(N'2015-05-14' AS Date), CAST(N'2015-06-11' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (44, N'B726840B', 1, 51, 5, CAST(N'2015-05-14' AS Date), CAST(N'2015-06-07' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (45, N'E6C9B3E0', 13, 37, 1, CAST(N'2020-08-16' AS Date), CAST(N'2020-09-27' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (45, N'E6C9B3E0', 13, 37, 1, CAST(N'2020-08-16' AS Date), CAST(N'2020-10-09' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
 INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (46, N'36C32DC7', 7, 79, 2, CAST(N'2021-07-08' AS Date), CAST(N'2021-08-12' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (47, N'34A10E90', 1, 7, 1, CAST(N'2023-07-11' AS Date), CAST(N'2023-08-08' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (47, N'34A10E90', 1, 7, 1, CAST(N'2023-07-11' AS Date), CAST(N'2023-08-13' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (48, N'D816C120', 8, 82, 4, CAST(N'2018-06-16' AS Date), CAST(N'2018-07-14' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (48, N'D816C120', 8, 82, 4, CAST(N'2018-06-16' AS Date), CAST(N'2018-07-09' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (49, N'932D8459', 14, 81, 4, CAST(N'2020-01-11' AS Date), CAST(N'2020-03-14' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (49, N'932D8459', 14, 81, 4, CAST(N'2020-01-11' AS Date), CAST(N'2020-03-09' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (50, N'038FA212', 8, 61, 3, CAST(N'2015-10-16' AS Date), CAST(N'2015-12-04' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (50, N'038FA212', 8, 61, 3, CAST(N'2015-10-16' AS Date), CAST(N'2015-11-29' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (51, N'75ED344A', 11, 56, 1, CAST(N'2022-01-30' AS Date), CAST(N'2022-02-13' AS Date), CAST(N'11:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (51, N'75ED344A', 11, 56, 1, CAST(N'2022-01-30' AS Date), CAST(N'2022-02-17' AS Date), CAST(N'11:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (52, N'8D722286', 7, 50, 5, CAST(N'2017-07-20' AS Date), CAST(N'2017-08-24' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (52, N'8D722286', 7, 50, 5, CAST(N'2017-07-20' AS Date), CAST(N'2017-08-23' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (53, N'89355E15', 11, 24, 3, CAST(N'2015-09-26' AS Date), CAST(N'2015-10-31' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (53, N'89355E15', 11, 24, 3, CAST(N'2015-09-26' AS Date), CAST(N'2015-10-30' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (54, N'BEC13ABD', 14, 79, 2, CAST(N'2020-10-14' AS Date), CAST(N'2020-11-11' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (54, N'BEC13ABD', 14, 79, 2, CAST(N'2020-10-14' AS Date), CAST(N'2020-11-08' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (55, N'96846897', 8, 3, 3, CAST(N'2017-03-11' AS Date), CAST(N'2017-06-10' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (55, N'96846897', 8, 3, 3, CAST(N'2017-03-11' AS Date), CAST(N'2017-06-05' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (56, N'57F8CC79', 6, 24, 1, CAST(N'2023-02-06' AS Date), CAST(N'2023-03-13' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (56, N'57F8CC79', 6, 24, 1, CAST(N'2023-02-06' AS Date), CAST(N'2023-03-18' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (57, N'ADC57874', 2, 100, 4, CAST(N'2022-06-30' AS Date), CAST(N'2022-08-18' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (57, N'ADC57874', 2, 100, 4, CAST(N'2022-06-30' AS Date), CAST(N'2022-08-17' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (58, N'E1B92E8E', 2, 28, 2, CAST(N'2022-11-12' AS Date), CAST(N'2022-12-24' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (58, N'E1B92E8E', 2, 28, 2, CAST(N'2022-11-12' AS Date), CAST(N'2022-12-21' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (59, N'B63DCDE3', 14, 39, 1, CAST(N'2020-09-14' AS Date), CAST(N'2020-10-12' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (59, N'B63DCDE3', 14, 39, 1, CAST(N'2020-09-14' AS Date), CAST(N'2020-10-17' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (60, N'EB275812', 3, 83, 5, CAST(N'2015-02-18' AS Date), CAST(N'2015-04-01' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (60, N'EB275812', 3, 83, 5, CAST(N'2015-02-18' AS Date), CAST(N'2015-03-29' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
 INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (61, N'AB1F5C39', 7, 40, 2, CAST(N'2022-10-05' AS Date), CAST(N'2022-11-09' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (62, N'9B8608F5', 11, 56, 4, CAST(N'2015-03-23' AS Date), CAST(N'2015-04-27' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (62, N'9B8608F5', 11, 56, 4, CAST(N'2015-03-23' AS Date), CAST(N'2015-04-26' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (63, N'C56B4B59', 10, 53, 2, CAST(N'2015-09-07' AS Date), CAST(N'2015-09-28' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (63, N'C56B4B59', 10, 53, 2, CAST(N'2015-09-07' AS Date), CAST(N'2015-09-22' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (64, N'6943D70E', 9, 83, 3, CAST(N'2016-08-26' AS Date), CAST(N'2016-10-14' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (64, N'6943D70E', 9, 83, 3, CAST(N'2016-08-26' AS Date), CAST(N'2016-10-09' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (65, N'AB4F52A6', 5, 40, 1, CAST(N'2020-06-15' AS Date), CAST(N'2020-07-27' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (65, N'AB4F52A6', 5, 40, 1, CAST(N'2020-06-15' AS Date), CAST(N'2020-08-08' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (66, N'0CF7F9D9', 10, 94, 2, CAST(N'2020-03-07' AS Date), CAST(N'2020-04-11' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (66, N'0CF7F9D9', 10, 94, 2, CAST(N'2020-03-07' AS Date), CAST(N'2020-04-05' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (67, N'FBF7F27F', 5, 67, 2, CAST(N'2018-06-04' AS Date), CAST(N'2018-06-25' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (67, N'FBF7F27F', 5, 67, 2, CAST(N'2018-06-04' AS Date), CAST(N'2018-06-23' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (68, N'A2B67893', 4, 5, 1, CAST(N'2015-09-28' AS Date), CAST(N'2015-10-26' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (68, N'A2B67893', 4, 5, 1, CAST(N'2015-09-28' AS Date), CAST(N'2015-10-31' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (69, N'4A5C73B8', 4, 54, 2, CAST(N'2018-01-31' AS Date), CAST(N'2018-04-11' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (69, N'4A5C73B8', 4, 54, 2, CAST(N'2018-01-31' AS Date), CAST(N'2018-04-08' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (70, N'61FE9C00', 1, 98, 1, CAST(N'2023-03-24' AS Date), CAST(N'2023-04-14' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (70, N'61FE9C00', 1, 98, 1, CAST(N'2023-03-24' AS Date), CAST(N'2023-04-15' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (71, N'C1E85913', 9, 10, 3, CAST(N'2018-06-04' AS Date), CAST(N'2018-07-09' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (71, N'C1E85913', 9, 10, 3, CAST(N'2018-06-04' AS Date), CAST(N'2018-07-04' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (72, N'F7077BAA', 14, 77, 5, CAST(N'2016-01-20' AS Date), CAST(N'2016-02-10' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (72, N'F7077BAA', 14, 77, 5, CAST(N'2016-01-20' AS Date), CAST(N'2016-02-05' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (73, N'8B6E8097', 1, 76, 5, CAST(N'2019-12-19' AS Date), CAST(N'2020-01-02' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (73, N'8B6E8097', 1, 76, 5, CAST(N'2019-12-19' AS Date), CAST(N'2019-12-31' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (74, N'218DDE6D', 14, 83, 4, CAST(N'2016-09-18' AS Date), CAST(N'2016-11-06' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (74, N'218DDE6D', 14, 83, 4, CAST(N'2016-09-18' AS Date), CAST(N'2016-11-01' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (75, N'7226738D', 5, 80, 3, CAST(N'2018-02-28' AS Date), CAST(N'2018-07-18' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (75, N'7226738D', 5, 80, 3, CAST(N'2018-02-28' AS Date), CAST(N'2018-07-17' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (76, N'9E93A2FC', 13, 54, 5, CAST(N'2023-06-14' AS Date), CAST(N'2023-07-12' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (76, N'9E93A2FC', 13, 54, 5, CAST(N'2023-06-14' AS Date), CAST(N'2023-07-10' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (77, N'878902B7', 11, 5, 2, CAST(N'2019-05-07' AS Date), CAST(N'2019-06-04' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (77, N'878902B7', 11, 5, 2, CAST(N'2019-05-07' AS Date), CAST(N'2019-06-03' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (78, N'8201F62A', 7, 100, 5, CAST(N'2023-11-29' AS Date), CAST(N'2023-12-20' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (78, N'8201F62A', 7, 100, 5, CAST(N'2023-11-29' AS Date), CAST(N'2023-12-16' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (79, N'E5101DAA', 12, 61, 2, CAST(N'2021-06-28' AS Date), CAST(N'2021-08-02' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (79, N'E5101DAA', 12, 61, 2, CAST(N'2021-06-28' AS Date), CAST(N'2021-07-27' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (80, N'389E86C6', 9, 99, 3, CAST(N'2018-06-12' AS Date), CAST(N'2018-07-10' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (80, N'389E86C6', 9, 99, 3, CAST(N'2018-06-12' AS Date), CAST(N'2018-07-05' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (81, N'23D531DA', 7, 21, 5, CAST(N'2021-05-16' AS Date), CAST(N'2021-06-13' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (81, N'23D531DA', 7, 21, 5, CAST(N'2021-05-16' AS Date), CAST(N'2021-06-08' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (82, N'B1528EE3', 9, 11, 1, CAST(N'2015-06-10' AS Date), CAST(N'2015-06-24' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (82, N'B1528EE3', 9, 11, 1, CAST(N'2015-06-10' AS Date), CAST(N'2015-06-26' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (83, N'0B2D3D97', 11, 32, 2, CAST(N'2023-10-12' AS Date), CAST(N'2023-11-02' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (83, N'0B2D3D97', 11, 32, 2, CAST(N'2023-10-12' AS Date), CAST(N'2023-10-31' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (84, N'1353ED66', 2, 82, 2, CAST(N'2015-11-21' AS Date), CAST(N'2015-12-12' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (84, N'1353ED66', 2, 82, 2, CAST(N'2015-11-21' AS Date), CAST(N'2015-12-10' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (85, N'7E7203A2', 13, 23, 2, CAST(N'2016-04-27' AS Date), CAST(N'2016-06-22' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (85, N'7E7203A2', 13, 23, 2, CAST(N'2016-04-27' AS Date), CAST(N'2016-06-19' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (86, N'897042FD', 6, 100, 3, CAST(N'2020-06-14' AS Date), CAST(N'2020-11-22' AS Date), CAST(N'10:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (86, N'897042FD', 6, 100, 3, CAST(N'2020-06-14' AS Date), CAST(N'2020-11-17' AS Date), CAST(N'10:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (87, N'D9BF86F1', 3, 49, 4, CAST(N'2022-02-28' AS Date), CAST(N'2022-05-09' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (87, N'D9BF86F1', 3, 49, 4, CAST(N'2022-02-28' AS Date), CAST(N'2022-05-08' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (88, N'0991E43A', 5, 72, 2, CAST(N'2017-11-16' AS Date), CAST(N'2017-12-28' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (88, N'0991E43A', 5, 72, 2, CAST(N'2017-11-16' AS Date), CAST(N'2017-12-25' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (89, N'A2C44372', 5, 61, 5, CAST(N'2016-10-22' AS Date), CAST(N'2016-11-12' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (89, N'A2C44372', 5, 61, 5, CAST(N'2016-10-22' AS Date), CAST(N'2016-11-10' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (90, N'4C712E4F', 9, 31, 4, CAST(N'2022-09-23' AS Date), CAST(N'2022-11-11' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (90, N'4C712E4F', 9, 31, 4, CAST(N'2022-09-23' AS Date), CAST(N'2022-11-06' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (91, N'EC79B611', 7, 24, 3, CAST(N'2016-02-27' AS Date), CAST(N'2016-05-21' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (91, N'EC79B611', 7, 24, 3, CAST(N'2016-02-27' AS Date), CAST(N'2016-05-20' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (92, N'E61D430A', 12, 84, 4, CAST(N'2016-04-26' AS Date), CAST(N'2016-05-31' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (92, N'E61D430A', 12, 84, 4, CAST(N'2016-04-26' AS Date), CAST(N'2016-05-30' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (93, N'9740A26F', 7, 60, 1, CAST(N'2021-03-17' AS Date), CAST(N'2021-04-07' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (93, N'9740A26F', 7, 60, 1, CAST(N'2021-03-17' AS Date), CAST(N'2021-04-09' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (94, N'2AD0CFF3', 4, 22, 5, CAST(N'2016-12-31' AS Date), CAST(N'2017-04-15' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (94, N'2AD0CFF3', 4, 22, 5, CAST(N'2016-12-31' AS Date), CAST(N'2017-04-09' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (95, N'9CFD1B78', 3, 1, 2, CAST(N'2015-11-13' AS Date), CAST(N'2016-02-05' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (95, N'9CFD1B78', 3, 1, 2, CAST(N'2015-11-13' AS Date), CAST(N'2016-01-31' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (96, N'67C3B3B0', 2, 18, 4, CAST(N'2015-10-13' AS Date), CAST(N'2015-12-22' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (96, N'67C3B3B0', 2, 18, 4, CAST(N'2015-10-13' AS Date), CAST(N'2015-12-21' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (97, N'B00F3FB8', 5, 60, 2, CAST(N'2016-10-21' AS Date), CAST(N'2016-11-18' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (97, N'B00F3FB8', 5, 60, 2, CAST(N'2016-10-21' AS Date), CAST(N'2016-11-17' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (98, N'B202F358', 11, 3, 4, CAST(N'2021-11-17' AS Date), CAST(N'2021-12-22' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (98, N'B202F358', 11, 3, 4, CAST(N'2021-11-17' AS Date), CAST(N'2021-12-21' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (99, N'F55EA2EA', 10, 30, 3, CAST(N'2018-01-07' AS Date), CAST(N'2018-04-22' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (99, N'F55EA2EA', 10, 30, 3, CAST(N'2018-01-07' AS Date), CAST(N'2018-04-21' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (100, N'CEFE6567', 9, 25, 3, CAST(N'2017-03-27' AS Date), CAST(N'2017-05-15' AS Date), CAST(N'14:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (100, N'CEFE6567', 9, 25, 3, CAST(N'2017-03-27' AS Date), CAST(N'2017-05-10' AS Date), CAST(N'14:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (101, N'1ACA3CF0', 1, 99, 5, CAST(N'2019-09-15' AS Date), CAST(N'2019-10-13' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (101, N'1ACA3CF0', 1, 99, 5, CAST(N'2019-09-15' AS Date), CAST(N'2019-10-09' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (102, N'7F2F8E64', 6, 81, 1, CAST(N'2019-07-08' AS Date), CAST(N'2019-08-12' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (102, N'7F2F8E64', 6, 81, 1, CAST(N'2019-07-08' AS Date), CAST(N'2019-08-17' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (103, N'97102464', 6, 21, 1, CAST(N'2018-03-09' AS Date), CAST(N'2018-06-08' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (103, N'97102464', 6, 21, 1, CAST(N'2018-03-09' AS Date), CAST(N'2018-07-11' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (104, N'46607FA9', 8, 5, 3, CAST(N'2021-07-16' AS Date), CAST(N'2021-09-03' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (104, N'46607FA9', 8, 5, 3, CAST(N'2021-07-16' AS Date), CAST(N'2021-08-29' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (105, N'48CA69DA', 6, 5, 5, CAST(N'2021-05-04' AS Date), CAST(N'2021-06-01' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (105, N'48CA69DA', 6, 5, 5, CAST(N'2021-05-04' AS Date), CAST(N'2021-05-26' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (106, N'2A844585', 14, 5, 1, CAST(N'2023-02-18' AS Date), CAST(N'2023-04-15' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (106, N'2A844585', 14, 5, 1, CAST(N'2023-02-18' AS Date), CAST(N'2023-04-27' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (107, N'A7CF8EBE', 3, 72, 5, CAST(N'2020-05-23' AS Date), CAST(N'2020-07-04' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (107, N'A7CF8EBE', 3, 72, 5, CAST(N'2020-05-23' AS Date), CAST(N'2020-07-01' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (108, N'54E0E0C0', 11, 43, 4, CAST(N'2022-06-25' AS Date), CAST(N'2022-07-30' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (108, N'54E0E0C0', 11, 43, 4, CAST(N'2022-06-25' AS Date), CAST(N'2022-07-29' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (109, N'A304F24F', 10, 64, 3, CAST(N'2021-09-25' AS Date), CAST(N'2021-10-30' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (109, N'A304F24F', 10, 64, 3, CAST(N'2021-09-25' AS Date), CAST(N'2021-10-29' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (110, N'E39C4A8F', 11, 18, 5, CAST(N'2021-08-07' AS Date), CAST(N'2021-08-21' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (110, N'E39C4A8F', 11, 18, 5, CAST(N'2021-08-07' AS Date), CAST(N'2021-08-20' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (111, N'377B488A', 13, 45, 1, CAST(N'2015-06-06' AS Date), CAST(N'2015-08-29' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (111, N'377B488A', 13, 45, 1, CAST(N'2015-06-06' AS Date), CAST(N'2015-09-24' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (112, N'787B72EC', 12, 98, 1, CAST(N'2018-12-28' AS Date), CAST(N'2019-02-01' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (112, N'787B72EC', 12, 98, 1, CAST(N'2018-12-28' AS Date), CAST(N'2019-02-06' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (113, N'CBDEC389', 10, 66, 3, CAST(N'2017-01-19' AS Date), CAST(N'2017-05-04' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (113, N'CBDEC389', 10, 66, 3, CAST(N'2017-01-19' AS Date), CAST(N'2017-05-03' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (114, N'03D24C04', 2, 33, 3, CAST(N'2020-12-30' AS Date), CAST(N'2021-05-19' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (114, N'03D24C04', 2, 33, 3, CAST(N'2020-12-30' AS Date), CAST(N'2021-05-18' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (115, N'7DF9A9A7', 13, 58, 3, CAST(N'2019-03-31' AS Date), CAST(N'2019-06-09' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (115, N'7DF9A9A7', 13, 58, 3, CAST(N'2019-03-31' AS Date), CAST(N'2019-06-08' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (116, N'86A9E0E4', 7, 58, 1, CAST(N'2022-03-05' AS Date), CAST(N'2022-03-26' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (116, N'86A9E0E4', 7, 58, 1, CAST(N'2022-03-05' AS Date), CAST(N'2022-03-28' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (117, N'673CBEC2', 3, 99, 3, CAST(N'2018-02-08' AS Date), CAST(N'2018-06-28' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (117, N'673CBEC2', 3, 99, 3, CAST(N'2018-02-08' AS Date), CAST(N'2018-06-27' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (118, N'52637E31', 1, 30, 5, CAST(N'2015-10-13' AS Date), CAST(N'2015-10-27' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (118, N'52637E31', 1, 30, 5, CAST(N'2015-10-13' AS Date), CAST(N'2015-10-25' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (119, N'50C97A17', 4, 48, 3, CAST(N'2021-02-16' AS Date), CAST(N'2021-08-10' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (119, N'50C97A17', 4, 48, 3, CAST(N'2021-02-16' AS Date), CAST(N'2021-08-09' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (120, N'475DB480', 10, 46, 3, CAST(N'2015-11-26' AS Date), CAST(N'2016-01-21' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (120, N'475DB480', 10, 46, 3, CAST(N'2015-11-26' AS Date), CAST(N'2016-01-16' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (121, N'2E7147DE', 10, 39, 4, CAST(N'2017-01-21' AS Date), CAST(N'2017-02-25' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (121, N'2E7147DE', 10, 39, 4, CAST(N'2017-01-21' AS Date), CAST(N'2017-02-24' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (122, N'2D20A4FE', 13, 75, 2, CAST(N'2019-09-05' AS Date), CAST(N'2019-10-17' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (122, N'2D20A4FE', 13, 75, 2, CAST(N'2019-09-05' AS Date), CAST(N'2019-10-14' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (123, N'C326F7E0', 7, 64, 2, CAST(N'2017-03-31' AS Date), CAST(N'2017-06-09' AS Date), CAST(N'10:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (123, N'C326F7E0', 7, 64, 2, CAST(N'2017-03-31' AS Date), CAST(N'2017-06-08' AS Date), CAST(N'10:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (124, N'6B3CA901', 1, 29, 4, CAST(N'2016-02-12' AS Date), CAST(N'2016-08-05' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (124, N'6B3CA901', 1, 29, 4, CAST(N'2016-02-12' AS Date), CAST(N'2016-08-04' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (125, N'41E00206', 6, 15, 2, CAST(N'2017-09-06' AS Date), CAST(N'2018-03-07' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (125, N'41E00206', 6, 15, 2, CAST(N'2017-09-06' AS Date), CAST(N'2018-03-04' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (126, N'409F73CB', 12, 40, 1, CAST(N'2023-12-24' AS Date), CAST(N'2024-01-07' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (126, N'409F73CB', 12, 40, 1, CAST(N'2023-12-24' AS Date), CAST(N'2024-01-05' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (127, N'11939011', 5, 25, 1, CAST(N'2015-02-23' AS Date), CAST(N'2015-04-06' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (127, N'11939011', 5, 25, 1, CAST(N'2015-02-23' AS Date), CAST(N'2015-04-18' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (128, N'AB5DFB0F', 12, 91, 1, CAST(N'2019-06-07' AS Date), CAST(N'2019-06-21' AS Date), CAST(N'11:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (128, N'AB5DFB0F', 12, 91, 1, CAST(N'2019-06-07' AS Date), CAST(N'2019-06-19' AS Date), CAST(N'11:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (129, N'9BE6A1E6', 10, 34, 2, CAST(N'2020-09-06' AS Date), CAST(N'2020-10-11' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (129, N'9BE6A1E6', 10, 34, 2, CAST(N'2020-09-06' AS Date), CAST(N'2020-10-05' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (130, N'AEA574A5', 13, 31, 4, CAST(N'2020-10-27' AS Date), CAST(N'2021-02-02' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (130, N'AEA574A5', 13, 31, 4, CAST(N'2020-10-27' AS Date), CAST(N'2021-01-28' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (131, N'A0A8A645', 14, 44, 3, CAST(N'2019-09-09' AS Date), CAST(N'2019-10-28' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (131, N'A0A8A645', 14, 44, 3, CAST(N'2019-09-09' AS Date), CAST(N'2019-10-23' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (132, N'9DC0E227', 11, 8, 3, CAST(N'2020-08-09' AS Date), CAST(N'2020-09-13' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (132, N'9DC0E227', 11, 8, 3, CAST(N'2020-08-09' AS Date), CAST(N'2020-09-12' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (133, N'D049EA6E', 13, 16, 4, CAST(N'2023-09-24' AS Date), CAST(N'2023-12-31' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (133, N'D049EA6E', 13, 16, 4, CAST(N'2023-09-24' AS Date), CAST(N'2023-12-26' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (134, N'6819B701', 13, 6, 1, CAST(N'2021-05-11' AS Date), CAST(N'2021-06-22' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (134, N'6819B701', 13, 6, 1, CAST(N'2021-05-11' AS Date), CAST(N'2021-07-04' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (135, N'37B0EB5D', 9, 6, 5, CAST(N'2020-09-23' AS Date), CAST(N'2020-10-07' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (135, N'37B0EB5D', 9, 6, 5, CAST(N'2020-09-23' AS Date), CAST(N'2020-10-05' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (136, N'949BC4D1', 1, 82, 2, CAST(N'2023-12-24' AS Date), CAST(N'2024-02-18' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (136, N'949BC4D1', 1, 82, 2, CAST(N'2023-12-24' AS Date), CAST(N'2024-02-11' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (137, N'1F670CAE', 3, 71, 1, CAST(N'2019-09-27' AS Date), CAST(N'2019-10-25' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (137, N'1F670CAE', 3, 71, 1, CAST(N'2019-09-27' AS Date), CAST(N'2019-11-02' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (138, N'FF47061A', 3, 72, 2, CAST(N'2018-06-23' AS Date), CAST(N'2018-08-18' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (138, N'FF47061A', 3, 72, 2, CAST(N'2018-06-23' AS Date), CAST(N'2018-08-15' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (139, N'B4B7ABB4', 6, 35, 2, CAST(N'2015-05-17' AS Date), CAST(N'2015-07-05' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (139, N'B4B7ABB4', 6, 35, 2, CAST(N'2015-05-17' AS Date), CAST(N'2015-07-01' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (140, N'D1E66C09', 11, 87, 1, CAST(N'2019-06-16' AS Date), CAST(N'2019-07-07' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (140, N'D1E66C09', 11, 87, 1, CAST(N'2019-06-16' AS Date), CAST(N'2019-07-12' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (141, N'ACEE2A2F', 6, 72, 1, CAST(N'2021-02-11' AS Date), CAST(N'2021-03-18' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (141, N'ACEE2A2F', 6, 72, 1, CAST(N'2021-02-11' AS Date), CAST(N'2021-03-23' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (142, N'700F665D', 11, 35, 5, CAST(N'2021-08-08' AS Date), CAST(N'2021-08-22' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (142, N'700F665D', 11, 35, 5, CAST(N'2021-08-08' AS Date), CAST(N'2021-08-17' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (143, N'36F70909', 10, 31, 2, CAST(N'2015-06-04' AS Date), CAST(N'2015-06-25' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (143, N'36F70909', 10, 31, 2, CAST(N'2015-06-04' AS Date), CAST(N'2015-06-23' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (144, N'80A85AA9', 1, 82, 1, CAST(N'2020-11-01' AS Date), CAST(N'2020-11-22' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (144, N'80A85AA9', 1, 82, 1, CAST(N'2020-11-01' AS Date), CAST(N'2020-11-23' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (145, N'66B5BBE5', 12, 72, 4, CAST(N'2023-11-08' AS Date), CAST(N'2023-12-06' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (145, N'66B5BBE5', 12, 72, 4, CAST(N'2023-11-08' AS Date), CAST(N'2023-12-05' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (146, N'D613042F', 8, 72, 1, CAST(N'2022-03-22' AS Date), CAST(N'2022-04-05' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (146, N'D613042F', 8, 72, 1, CAST(N'2022-03-22' AS Date), CAST(N'2022-04-02' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (147, N'0086557B', 2, 22, 5, CAST(N'2015-05-15' AS Date), CAST(N'2015-06-05' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (147, N'0086557B', 2, 22, 5, CAST(N'2015-05-15' AS Date), CAST(N'2015-06-03' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (148, N'99C54477', 14, 73, 5, CAST(N'2017-03-12' AS Date), CAST(N'2017-04-09' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (148, N'99C54477', 14, 73, 5, CAST(N'2017-03-12' AS Date), CAST(N'2017-04-05' AS Date), CAST(N'09:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (149, N'B17F486E', 8, 68, 1, CAST(N'2021-06-02' AS Date), CAST(N'2021-06-09' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (149, N'B17F486E', 8, 68, 1, CAST(N'2021-06-02' AS Date), CAST(N'2021-06-10' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (150, N'8056D3A4', 14, 24, 5, CAST(N'2023-08-08' AS Date), CAST(N'2023-08-22' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (150, N'8056D3A4', 14, 24, 5, CAST(N'2023-08-01' AS Date), CAST(N'2023-08-13' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (151, N'4C4DCE2C', 10, 68, 3, CAST(N'2023-03-19' AS Date), CAST(N'2023-07-02' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (151, N'4C4DCE2C', 10, 68, 3, CAST(N'2023-03-19' AS Date), CAST(N'2023-07-01' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (152, N'19001FEA', 14, 2, 2, CAST(N'2018-09-07' AS Date), CAST(N'2018-11-02' AS Date), CAST(N'14:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (152, N'19001FEA', 14, 2, 2, CAST(N'2018-09-07' AS Date), CAST(N'2018-10-26' AS Date), CAST(N'14:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (153, N'B1F8E8CE', 11, 56, 4, CAST(N'2023-02-12' AS Date), CAST(N'2023-04-02' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (153, N'B1F8E8CE', 11, 56, 4, CAST(N'2023-02-12' AS Date), CAST(N'2023-04-01' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (154, N'1DBAC9F4', 8, 51, 2, CAST(N'2016-12-06' AS Date), CAST(N'2017-01-03' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (154, N'1DBAC9F4', 8, 51, 2, CAST(N'2016-12-06' AS Date), CAST(N'2016-12-31' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (155, N'C87242E9', 14, 32, 3, CAST(N'2021-01-11' AS Date), CAST(N'2021-03-01' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (155, N'C87242E9', 14, 32, 3, CAST(N'2021-01-11' AS Date), CAST(N'2021-02-24' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (156, N'9A13BD43', 7, 30, 1, CAST(N'2018-12-23' AS Date), CAST(N'2019-01-20' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (156, N'9A13BD43', 7, 30, 1, CAST(N'2018-12-23' AS Date), CAST(N'2019-01-24' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (157, N'4E2AA6A6', 14, 69, 5, CAST(N'2019-05-31' AS Date), CAST(N'2019-06-28' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (157, N'4E2AA6A6', 14, 69, 5, CAST(N'2019-05-31' AS Date), CAST(N'2019-06-24' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (158, N'9D8E4E73', 12, 55, 4, CAST(N'2017-07-05' AS Date), CAST(N'2017-08-09' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (158, N'9D8E4E73', 12, 55, 4, CAST(N'2017-07-05' AS Date), CAST(N'2017-08-08' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (159, N'570D0558', 2, 21, 2, CAST(N'2023-03-10' AS Date), CAST(N'2023-04-07' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (159, N'570D0558', 2, 21, 2, CAST(N'2023-03-10' AS Date), CAST(N'2023-04-06' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (160, N'897BA8DB', 6, 49, 4, CAST(N'2023-11-10' AS Date), CAST(N'2024-02-23' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (160, N'897BA8DB', 6, 49, 4, CAST(N'2023-11-10' AS Date), CAST(N'2024-02-22' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (161, N'946255EF', 6, 9, 1, CAST(N'2018-03-01' AS Date), CAST(N'2018-04-19' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (161, N'946255EF', 6, 9, 1, CAST(N'2018-03-01' AS Date), CAST(N'2018-05-01' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (162, N'397E2808', 7, 32, 5, CAST(N'2021-04-29' AS Date), CAST(N'2021-07-08' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (162, N'397E2808', 7, 32, 5, CAST(N'2021-04-29' AS Date), CAST(N'2021-07-07' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (163, N'E4535151', 7, 32, 1, CAST(N'2016-03-24' AS Date), CAST(N'2016-04-14' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (163, N'E4535151', 7, 32, 1, CAST(N'2016-03-24' AS Date), CAST(N'2016-04-16' AS Date), CAST(N'13:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (164, N'306BA17A', 8, 96, 3, CAST(N'2022-05-23' AS Date), CAST(N'2022-06-27' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (164, N'306BA17A', 8, 96, 3, CAST(N'2022-05-23' AS Date), CAST(N'2022-06-22' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (165, N'C1EAE951', 13, 4, 4, CAST(N'2023-12-03' AS Date), CAST(N'2024-04-21' AS Date), CAST(N'14:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (165, N'C1EAE951', 13, 4, 4, CAST(N'2023-12-03' AS Date), CAST(N'2024-04-20' AS Date), CAST(N'14:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (166, N'C24CAFEF', 5, 41, 3, CAST(N'2021-08-02' AS Date), CAST(N'2021-09-06' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (166, N'C24CAFEF', 5, 41, 3, CAST(N'2021-08-02' AS Date), CAST(N'2021-09-05' AS Date), CAST(N'10:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (167, N'D54CB067', 3, 63, 2, CAST(N'2017-10-23' AS Date), CAST(N'2017-12-04' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (167, N'D54CB067', 3, 63, 2, CAST(N'2017-10-23' AS Date), CAST(N'2017-12-01' AS Date), CAST(N'09:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (168, N'00A245EA', 3, 92, 4, CAST(N'2022-04-18' AS Date), CAST(N'2023-01-23' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (168, N'00A245EA', 3, 92, 4, CAST(N'2022-04-18' AS Date), CAST(N'2023-01-22' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (169, N'9542DC39', 7, 81, 3, CAST(N'2018-03-20' AS Date), CAST(N'2018-05-22' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (169, N'9542DC39', 7, 81, 3, CAST(N'2018-03-20' AS Date), CAST(N'2018-05-21' AS Date), CAST(N'12:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (170, N'78BA61D8', 1, 60, 2, CAST(N'2020-03-01' AS Date), CAST(N'2020-04-26' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (170, N'78BA61D8', 1, 60, 2, CAST(N'2020-03-01' AS Date), CAST(N'2020-04-19' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (171, N'136197C6', 4, 59, 2, CAST(N'2017-08-27' AS Date), CAST(N'2017-12-10' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (171, N'136197C6', 4, 59, 2, CAST(N'2017-08-27' AS Date), CAST(N'2017-12-04' AS Date), CAST(N'13:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (172, N'5A9B9A48', 13, 51, 1, CAST(N'2021-02-26' AS Date), CAST(N'2021-05-21' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (172, N'5A9B9A48', 13, 51, 1, CAST(N'2021-02-26' AS Date), CAST(N'2021-06-16' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (173, N'6E84AA1D', 2, 7, 4, CAST(N'2021-10-18' AS Date), CAST(N'2021-12-06' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (173, N'6E84AA1D', 2, 7, 4, CAST(N'2021-10-18' AS Date), CAST(N'2021-12-05' AS Date), CAST(N'13:00:00' AS Time), CAST(N'16:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (174, N'B77CE258', 6, 97, 4, CAST(N'2015-10-25' AS Date), CAST(N'2016-09-04' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (174, N'B77CE258', 6, 97, 4, CAST(N'2015-10-25' AS Date), CAST(N'2016-09-03' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (175, N'8300A765', 5, 55, 2, CAST(N'2019-09-23' AS Date), CAST(N'2019-10-21' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (175, N'8300A765', 5, 55, 2, CAST(N'2019-09-23' AS Date), CAST(N'2019-10-20' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (176, N'0A41D7E2', 13, 64, 3, CAST(N'2021-08-27' AS Date), CAST(N'2022-01-14' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (176, N'0A41D7E2', 13, 64, 3, CAST(N'2021-08-27' AS Date), CAST(N'2022-01-13' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (177, N'37341A3D', 14, 68, 5, CAST(N'2020-10-17' AS Date), CAST(N'2020-11-14' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (177, N'37341A3D', 14, 68, 5, CAST(N'2020-10-17' AS Date), CAST(N'2020-11-10' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (178, N'13B9154A', 3, 90, 5, CAST(N'2015-08-23' AS Date), CAST(N'2015-09-20' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (178, N'13B9154A', 3, 90, 5, CAST(N'2015-08-23' AS Date), CAST(N'2015-09-18' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (179, N'AE24BB28', 3, 80, 3, CAST(N'2016-12-22' AS Date), CAST(N'2017-05-11' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (179, N'AE24BB28', 3, 80, 3, CAST(N'2016-12-22' AS Date), CAST(N'2017-05-10' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (180, N'17BA4AF5', 13, 10, 3, CAST(N'2022-08-03' AS Date), CAST(N'2022-11-09' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (180, N'17BA4AF5', 13, 10, 3, CAST(N'2022-08-03' AS Date), CAST(N'2022-11-04' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (181, N'EE9B8EFB', 10, 6, 1, CAST(N'2023-07-18' AS Date), CAST(N'2023-08-08' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (181, N'EE9B8EFB', 10, 6, 1, CAST(N'2023-07-18' AS Date), CAST(N'2023-08-06' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (182, N'6E28F1B0', 13, 18, 2, CAST(N'2016-12-16' AS Date), CAST(N'2017-01-27' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (182, N'6E28F1B0', 13, 18, 2, CAST(N'2016-12-16' AS Date), CAST(N'2017-01-24' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (183, N'5B3CC5C6', 7, 60, 1, CAST(N'2023-12-23' AS Date), CAST(N'2024-01-27' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (183, N'5B3CC5C6', 7, 60, 1, CAST(N'2023-12-23' AS Date), CAST(N'2024-02-08' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (184, N'2B8BF761', 13, 24, 1, CAST(N'2022-04-04' AS Date), CAST(N'2022-05-16' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (184, N'2B8BF761', 13, 24, 1, CAST(N'2022-04-04' AS Date), CAST(N'2022-05-28' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (185, N'119A9D28', 11, 23, 5, CAST(N'2020-12-04' AS Date), CAST(N'2020-12-18' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (185, N'119A9D28', 11, 23, 5, CAST(N'2020-12-04' AS Date), CAST(N'2020-12-17' AS Date), CAST(N'09:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (186, N'AD84F6D4', 11, 35, 1, CAST(N'2022-09-25' AS Date), CAST(N'2022-10-09' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (186, N'AD84F6D4', 11, 35, 1, CAST(N'2022-09-25' AS Date), CAST(N'2022-10-07' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (187, N'291EBEF6', 10, 74, 5, CAST(N'2017-07-20' AS Date), CAST(N'2017-08-03' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (187, N'291EBEF6', 10, 74, 5, CAST(N'2017-07-20' AS Date), CAST(N'2017-07-29' AS Date), CAST(N'10:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (188, N'1F163363', 5, 47, 3, CAST(N'2019-01-30' AS Date), CAST(N'2019-04-10' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (188, N'1F163363', 5, 47, 3, CAST(N'2019-01-30' AS Date), CAST(N'2019-04-09' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (189, N'39ED200B', 1, 52, 4, CAST(N'2018-04-09' AS Date), CAST(N'2018-06-11' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (189, N'39ED200B', 1, 52, 4, CAST(N'2018-04-09' AS Date), CAST(N'2018-06-06' AS Date), CAST(N'08:00:00' AS Time), CAST(N'11:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (190, N'21EA28BC', 5, 53, 3, CAST(N'2015-06-22' AS Date), CAST(N'2015-07-27' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (190, N'21EA28BC', 5, 53, 3, CAST(N'2015-06-22' AS Date), CAST(N'2015-07-26' AS Date), CAST(N'11:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (191, N'58703120', 7, 57, 1, CAST(N'2023-03-02' AS Date), CAST(N'2023-03-30' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (191, N'58703120', 7, 57, 1, CAST(N'2023-03-02' AS Date), CAST(N'2023-04-03' AS Date), CAST(N'14:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (192, N'32F38EE7', 10, 5, 2, CAST(N'2017-08-04' AS Date), CAST(N'2017-09-08' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (192, N'32F38EE7', 10, 5, 2, CAST(N'2017-08-04' AS Date), CAST(N'2017-09-02' AS Date), CAST(N'12:00:00' AS Time), CAST(N'14:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (193, N'A0C59108', 1, 68, 3, CAST(N'2016-11-12' AS Date), CAST(N'2016-12-31' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (193, N'A0C59108', 1, 68, 3, CAST(N'2016-11-12' AS Date), CAST(N'2016-12-26' AS Date), CAST(N'08:00:00' AS Time), CAST(N'12:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (194, N'26F42C87', 13, 82, 3, CAST(N'2022-10-11' AS Date), CAST(N'2023-01-17' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (194, N'26F42C87', 13, 82, 3, CAST(N'2022-10-11' AS Date), CAST(N'2023-01-12' AS Date), CAST(N'12:00:00' AS Time), CAST(N'15:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (195, N'98EAC89B', 13, 87, 3, CAST(N'2021-09-29' AS Date), CAST(N'2022-02-16' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (195, N'98EAC89B', 13, 87, 3, CAST(N'2021-09-29' AS Date), CAST(N'2022-02-15' AS Date), CAST(N'15:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (196, N'7C7F5B18', 4, 51, 3, CAST(N'2017-09-15' AS Date), CAST(N'2018-03-09' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (196, N'7C7F5B18', 4, 51, 3, CAST(N'2017-09-15' AS Date), CAST(N'2018-03-08' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (197, N'704AF815', 11, 33, 3, CAST(N'2021-09-16' AS Date), CAST(N'2022-02-03' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (197, N'704AF815', 11, 33, 3, CAST(N'2021-09-16' AS Date), CAST(N'2022-02-02' AS Date), CAST(N'16:00:00' AS Time), CAST(N'17:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (198, N'01D26405', 6, 26, 1, CAST(N'2018-06-29' AS Date), CAST(N'2018-08-17' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (198, N'01D26405', 6, 26, 1, CAST(N'2018-06-29' AS Date), CAST(N'2018-08-29' AS Date), CAST(N'11:00:00' AS Time), CAST(N'13:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (199, N'CB6C1900', 2, 77, 3, CAST(N'2019-06-24' AS Date), CAST(N'2019-09-02' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (199, N'CB6C1900', 2, 77, 3, CAST(N'2019-06-24' AS Date), CAST(N'2019-09-01' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (200, N'800DD6AC', 13, 100, 2, CAST(N'2016-07-14' AS Date), CAST(N'2016-10-06' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
+INSERT [dbo].[Sections] ([Id], [SectionName], [CourseId], [InstructorId], [ScheduleId], [StartDate], [EndDate], [StartTime], [EndTime]) VALUES (200, N'800DD6AC', 13, 100, 2, CAST(N'2016-07-14' AS Date), CAST(N'2016-10-01' AS Date), CAST(N'08:00:00' AS Time), CAST(N'10:00:00' AS Time))
 GO
-/****** Object:  Index [IX_Enrollments_ParticipantId]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Index [IX_Enrollments_ParticipantId]    Script Date: 2023-08-06 2:58:51 PM ******/
 CREATE NONCLUSTERED INDEX [IX_Enrollments_ParticipantId] ON [dbo].[Enrollments]
 (
 	[ParticipantId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_Instructors_OfficeId]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Index [IX_Instructors_OfficeId]    Script Date: 2023-08-06 2:58:51 PM ******/
 CREATE UNIQUE NONCLUSTERED INDEX [IX_Instructors_OfficeId] ON [dbo].[Instructors]
 (
 	[OfficeId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, IGNORE_DUP_KEY = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_Sections_CourseId]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Index [IX_Sections_CourseId]    Script Date: 2023-08-06 2:58:51 PM ******/
 CREATE NONCLUSTERED INDEX [IX_Sections_CourseId] ON [dbo].[Sections]
 (
 	[CourseId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_Sections_InstructorId]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Index [IX_Sections_InstructorId]    Script Date: 2023-08-06 2:58:51 PM ******/
 CREATE NONCLUSTERED INDEX [IX_Sections_InstructorId] ON [dbo].[Sections]
 (
 	[InstructorId] ASC
 )WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
 GO
-/****** Object:  Index [IX_Sections_ScheduleId]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  Index [IX_Sections_ScheduleId]    Script Date: 2023-08-06 2:58:51 PM ******/
 CREATE NONCLUSTERED INDEX [IX_Sections_ScheduleId] ON [dbo].[Sections]
 (
 	[ScheduleId] ASC
@@ -14601,7 +14609,7 @@ ON DELETE CASCADE
 GO
 ALTER TABLE [dbo].[Sections] CHECK CONSTRAINT [FK_Sections_Schedules_ScheduleId]
 GO
-/****** Object:  StoredProcedure [dbo].[sp_GetSectionDetails]    Script Date: 2023-08-06 1:58:59 PM ******/
+/****** Object:  StoredProcedure [dbo].[sp_GetSectionDetails]    Script Date: 2023-08-06 2:58:51 PM ******/
 SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
@@ -14629,7 +14637,7 @@ BEGIN
         SC.THU,
         SC.FRI,
         SC.SAT,
-            (DATEDIFF(MINUTE, S.StartTime, S.EndTime)/60.0) * 
+            CAST((DATEDIFF(MINUTE, S.StartTime, S.EndTime)/60.0) * 
                 CASE 
                     WHEN SC.ScheduleType = 'Daily' THEN 7
                     WHEN SC.ScheduleType = 'DayAfterDay' THEN 3
@@ -14637,7 +14645,7 @@ BEGIN
                     WHEN SC.ScheduleType = 'Weekend' THEN 2
                     WHEN SC.ScheduleType = 'Compact' THEN 7
                     ELSE 0
-                END AS HoursPerWeek
+                END AS INT) AS HoursPerWeek
     FROM Sections S
     JOIN Courses C ON S.CourseId = C.Id
     JOIN Schedules SC ON S.ScheduleId = SC.Id
