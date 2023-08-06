@@ -2,20 +2,20 @@
 
 ##### + Courses  :book:
 <div style="padding: 10px; font-size: 10px; font-weight: bold"> 
+
 ```sql
-	
 	CREATE TABLE [dbo].[Courses](
 	[Id] [int]  PRIMARY KEY,
 	[CourseName] [varchar](255) NOT NULL,
 	[Price] [decimal](15, 2) NOT NULL,
 	[HoursToComplete] [int] NOT NULL
-	);
-	
+	);	
 ```
 </div>
 
 ##### + Offices  :book:
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
+
 ```sql
 	CREATE TABLE [dbo].[Offices](
 	[Id] [int] NOT NULL PRIMARY KEY,
@@ -27,6 +27,7 @@
 
 ##### + Instructors Table :mens:
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
+
 ```sql
 	CREATE TABLE [dbo].[Instructors](
 	[Id] [int] PRIMARY KEY,
@@ -39,6 +40,7 @@
 
 ##### + Schedules Table :department_store:
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
+
 ```sql
 	CREATE TABLE [dbo].[Schedules](
 	[Id] [int] PRIMARY KEY,
@@ -56,6 +58,7 @@
 
 ##### + Sections Table :department_store:
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
+
 ```sql
 	CREATE TABLE [dbo].[Sections](
 	[Id] [int] NOT NULL PRIMARY KEY,
@@ -73,6 +76,7 @@
 
 #####  + Participants Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
+
 ```sql
 	CREATE TABLE [dbo].[Particpants](
 	[Id] [int] PRIMARY KEY,
@@ -84,6 +88,7 @@
   
 #####  + Corporates Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
+
 ```sql
 	CREATE TABLE [dbo].[Coporates](
 	[Id] [int] PRIMARY KEY REFERENCES Participats(Id),
@@ -95,6 +100,7 @@
 
 ##### Individuals Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
+
 ```sql
 	CREATE TABLE [dbo].[Individuals](
 	[Id] [int] PRIMARY KEY REFERENCES Participats(Id),
@@ -107,6 +113,7 @@
  
 #### + Enrollments :man: :girl:  
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
+
 ```sql
 CREATE TABLE [dbo].[Enrollments](
 	[SectionId] [int] NOT NULL REFERENCES Sections(Id),
