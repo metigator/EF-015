@@ -1,5 +1,9 @@
 ### Metigator Academy  :school:
 
+![image](https://github.com/metigator/EF-015/assets/87314838/7dee2b62-a309-4b15-9858-d22636dd2cd7)
+
+
+
 ##### + Courses  :book:
 
 ```sql
@@ -30,7 +34,7 @@
 	[FName] [varchar](50) NOT NULL,
 	[LName] [varchar](50) NOT NULL,
 	[OfficeId] [int] REFERENCES Offices(Id),
- 	)
+ 	);
 ```
 
 ##### + Schedules Table :department_store:
