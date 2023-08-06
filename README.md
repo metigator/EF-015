@@ -1,7 +1,6 @@
 ### Metigator Academy  :school:
 
 ##### + Courses  :book:
-<div style="padding: 10px; font-size: 10px; font-weight: bold"> 
 
 ```sql
 	CREATE TABLE [dbo].[Courses](
@@ -11,10 +10,8 @@
 	[HoursToComplete] [int] NOT NULL
 	);	
 ```
-</div>
 
 ##### + Offices  :book:
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
 
 ```sql
 	CREATE TABLE [dbo].[Offices](
@@ -26,7 +23,6 @@
 </div>
 
 ##### + Instructors Table :mens:
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
 
 ```sql
 	CREATE TABLE [dbo].[Instructors](
@@ -36,10 +32,8 @@
 	[OfficeId] [int] REFERENCES Offices(Id),
  	)
 ```
-</div>
 
 ##### + Schedules Table :department_store:
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
 
 ```sql
 	CREATE TABLE [dbo].[Schedules](
@@ -54,10 +48,7 @@
 	[SAT] [bit] NOT NULL
 	);
 ```
-</div>
-
 ##### + Sections Table :department_store:
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
 
 ```sql
 	CREATE TABLE [dbo].[Sections](
@@ -72,10 +63,8 @@
 	[EndTime] [time](0) NOT NULL
 	);
 ```
-</div> 
 
 #####  + Participants Table
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
 
 ```sql
 	CREATE TABLE [dbo].[Particpants](
@@ -87,7 +76,6 @@
 </div>
   
 #####  + Corporates Table
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
 
 ```sql
 	CREATE TABLE [dbo].[Coporates](
@@ -96,10 +84,8 @@
 	[JobTitle] [nvarchar](max) NOT NULL
 	);
 ```
-</div>
 
 ##### Individuals Table
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
 
 ```sql
 	CREATE TABLE [dbo].[Individuals](
@@ -109,10 +95,8 @@
 	[IsIntern] [bit] NOT NULL
 	);
 ```
-</div>
  
 #### + Enrollments :man: :girl:  
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
 
 ```sql
 CREATE TABLE [dbo].[Enrollments](
@@ -121,8 +105,6 @@ CREATE TABLE [dbo].[Enrollments](
 	PRIMARYKEY(SectionId, ParticipantId)
 	); 
 ```
-</div>
-
 ##### + Stored Procedure GetSectionDetais
 ```sql
 USE [EF015]
