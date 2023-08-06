@@ -2,47 +2,116 @@
 
 ##### + Courses  :book:
 <div style="padding: 10px; font-size: 10px; font-weight: bold"> 
-![image](https://github.com/metigator/EF-015/assets/87314838/c55689c0-78fa-4615-8b71-037e852ca082)
+```sql
+	CREATE TABLE [dbo].[Courses](
+	[Id] [int]  PRIMARY KEY,
+	[CourseName] [varchar](255) NOT NULL,
+	[Price] [decimal](15, 2) NOT NULL,
+	[HoursToComplete] [int] NOT NULL
+	);
+```
 </div>
 
-##### + Office  :book:
+##### + Offices  :book:
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/27e51590-73d2-4512-8e52-cf7d5c50e84b)
+```sql
+	CREATE TABLE [dbo].[Offices](
+	[Id] [int] NOT NULL PRIMARY KEY,
+	[OfficeName] [varchar](50) NOT NULL,
+	[OfficeLocation] [varchar](50) NOT NULL
+	);
+```
 </div>
 
 ##### + Instructors Table :mens:
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/a34176fd-a237-4dd2-b7e1-665327085803)
+```sql
+	CREATE TABLE [dbo].[Instructors](
+	[Id] [int] PRIMARY KEY,
+	[FName] [varchar](50) NOT NULL,
+	[LName] [varchar](50) NOT NULL,
+	[OfficeId] [int] REFERENCES Offices(Id),
+ 	)
+```
 </div>
 
 ##### + Schedules Table :department_store:
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/8e2f65c4-ee3c-4573-8c9d-83f1ed0d3a84)
+```sql
+	CREATE TABLE [dbo].[Schedules](
+	[Id] [int] PRIMARY KEY,
+	[ScheduleType] [nvarchar](max) NOT NULL,
+	[SUN] [bit] NOT NULL,
+	[MON] [bit] NOT NULL,
+	[TUE] [bit] NOT NULL,
+	[WED] [bit] NOT NULL,
+	[THU] [bit] NOT NULL,
+	[FRI] [bit] NOT NULL,
+	[SAT] [bit] NOT NULL
+	);
+```
 </div>
 
 ##### + Sections Table :department_store:
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/0ccb36c4-6e46-4a00-a4a1-273768f4cd0b)
+```sql
+	CREATE TABLE [dbo].[Sections](
+	[Id] [int] NOT NULL PRIMARY KEY,
+	[SectionName] [varchar](255) NOT NULL,
+	[CourseId] [int] NOT NULL REFERENCES Courses(Id),
+	[InstructorId] [int] NOT NULL REFERENCES Instructors(Id),
+	[ScheduleId] [int] NOT NULL REFERENCES Schedules(Id),
+	[StartDate] [date] NOT NULL,
+	[EndDate] [date] NOT NULL,
+	[StartTime] [time](0) NOT NULL,
+	[EndTime] [time](0) NOT NULL
+	);
+```
 </div> 
 
 #####  + Participants Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
- ![image](https://github.com/metigator/EF-015/assets/87314838/62181093-b405-44a1-9187-b40bf651c591)
+```sql
+	CREATE TABLE [dbo].[Particpants](
+	[Id] [int] PRIMARY KEY,
+	[FName] [varchar](50) NOT NULL,
+	[LName] [varchar](50) NOT NULL,
+	); 
+```A
 </div>
   
 #####  + Corporates Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/f15be23a-570b-4dfc-84ca-345ce9376c6c)
+```sql
+	CREATE TABLE [dbo].[Coporates](
+	[Id] [int] PRIMARY KEY REFERENCES Participats(Id),
+	[Company] [nvarchar](max) NOT NULL,
+	[JobTitle] [nvarchar](max) NOT NULL
+	);
+```
 </div>
 
 ##### Individuals Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/42e220a1-df23-4393-932d-c55968fa41b5)
+```sql
+	CREATE TABLE [dbo].[Individuals](
+	[Id] [int] PRIMARY KEY REFERENCES Participats(Id),
+	[University] [nvarchar](max) NOT NULL,
+	[YearOfGraduation] [int] NOT NULL,
+	[IsIntern] [bit] NOT NULL
+	);
+```
 </div>
  
-#### + Participant Enrollment :man: :girl:  
+#### + Enrollments :man: :girl:  
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/c8f9db12-341e-44a8-ab45-fa2e14f77cdc)
+```sql
+CREATE TABLE [dbo].[Enrollments](
+	[SectionId] [int] NOT NULL REFERENCES Sections(Id),
+	[ParticipantId] [int] NOT NULL REFERENCES Courses(Id),
+	PRIMARYKEY(SectionId, ParticipantId)
+	); 
+```
 </div>
 
 ##### + Stored Procedure GetSectionDetais
