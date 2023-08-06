@@ -25,17 +25,17 @@
 ![image](https://github.com/metigator/EF-015/assets/87314838/0ccb36c4-6e46-4a00-a4a1-273768f4cd0b)
 </div> 
 
-#### Participants Table
+#####  + Participants Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
  ![image](https://github.com/metigator/EF-015/assets/87314838/62181093-b405-44a1-9187-b40bf651c591)
 </div>
   
-#### Corporates Table
+#####  + Corporates Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
 ![image](https://github.com/metigator/EF-015/assets/87314838/f15be23a-570b-4dfc-84ca-345ce9376c6c)
 </div>
 
-#### Individuals Table
+##### Individuals Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
 ![image](https://github.com/metigator/EF-015/assets/87314838/42e220a1-df23-4393-932d-c55968fa41b5)
 </div>
@@ -45,7 +45,7 @@
 ![image](https://github.com/metigator/EF-015/assets/87314838/c8f9db12-341e-44a8-ab45-fa2e14f77cdc)
 </div>
 
-#### + Stored Procedure GetSectionDetais
+##### + Stored Procedure GetSectionDetais
 ```sql
 USE [EF015]
 GO
@@ -108,13 +108,11 @@ SELECT	'Return Value' = @return_value
 GO
 
 ```
-![image](https://github.com/metigator/EF-015/assets/87314838/dc8b7d1e-d3e3-46e0-8c62-b7a535d692b4)
-
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
 ![image](https://github.com/metigator/EF-015/assets/87314838/8b0d1fb1-e50f-4efc-a2af-95c746d03865)
 </div>
 
-#### + Function InstructorAvailable
+##### + Function InstructorAvailable
 
 ```sql
 USE [EF015]
