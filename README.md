@@ -109,7 +109,7 @@ GO
 
 ```
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-![image](https://github.com/metigator/EF-015/assets/87314838/8b0d1fb1-e50f-4efc-a2af-95c746d03865)
+![image](https://github.com/metigator/EF-015/assets/87314838/1f1ab081-857b-4e7f-a7f7-1d6195e2a279)
 </div>
 
 ##### + Function InstructorAvailable
@@ -161,4 +161,3 @@ END
 SELECT dbo.fn_InstructorAvailability(1, '2023-08-01', '2023-08-15', '10:00:00', '14:00:00') AS AvailabilityStatus;
 ```
 
-![image](https://github.com/metigator/EF-015/assets/87314838/84f873a6-16dd-4680-bfc0-cdab1977e075)
