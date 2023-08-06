@@ -30,25 +30,22 @@
  ![image](https://github.com/metigator/EF-015/assets/87314838/62181093-b405-44a1-9187-b40bf651c591)
 </div>
   
-
+#### Corporates Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
-* Corporates Table 
 ![image](https://github.com/metigator/EF-015/assets/87314838/f15be23a-570b-4dfc-84ca-345ce9376c6c)
 </div>
 
-* Individuals Table 
+#### Individuals Table
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
 ![image](https://github.com/metigator/EF-015/assets/87314838/42e220a1-df23-4393-932d-c55968fa41b5)
 </div>
  
 #### + Participant Enrollment :man: :girl:  
-
 <div style="padding: 10px; font-size: 10px; font-weight: bold">
 ![image](https://github.com/metigator/EF-015/assets/87314838/c8f9db12-341e-44a8-ab45-fa2e14f77cdc)
 </div>
 
 #### + Stored Procedure GetSectionDetais
-
 ```sql
 USE [EF015]
 GO
@@ -95,7 +92,6 @@ BEGIN
     JOIN Instructors I ON S.InstructorId = I.Id
     WHERE S.Id = @SectionId
 END;
-
 ```
 
 ```sql
@@ -161,7 +157,6 @@ BEGIN
 
     RETURN @Result
 END
-
 ```
 
 ```sql
