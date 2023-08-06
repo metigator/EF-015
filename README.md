@@ -1,7 +1,7 @@
 ### Metigator Academy  :school:
 
 ##### + Courses  :book:
-<div style="padding: 10px; font-size: 10px; font-weight: bold">
+<div style="padding: 10px; font-size: 10px; font-weight: bold"> 
 ![image](https://github.com/metigator/EF-015/assets/87314838/c55689c0-78fa-4615-8b71-037e852ca082)
 </div>
 
