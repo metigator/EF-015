@@ -77,7 +77,7 @@
 	[FName] [varchar](50) NOT NULL,
 	[LName] [varchar](50) NOT NULL,
 	); 
-```A
+```
 </div>
   
 #####  + Corporates Table
