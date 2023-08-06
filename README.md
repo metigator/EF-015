@@ -3,12 +3,14 @@
 ##### + Courses  :book:
 <div style="padding: 10px; font-size: 10px; font-weight: bold"> 
 ```sql
+	
 	CREATE TABLE [dbo].[Courses](
 	[Id] [int]  PRIMARY KEY,
 	[CourseName] [varchar](255) NOT NULL,
 	[Price] [decimal](15, 2) NOT NULL,
 	[HoursToComplete] [int] NOT NULL
 	);
+	
 ```
 </div>
 
