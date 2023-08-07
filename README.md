@@ -159,19 +159,9 @@ END;
 ```
 
 ```sql
-AUSE [EF015]
-GO
-
-DECLARE	@return_value int
-
-EXEC	@return_value = [dbo].[sp_GetSectionDetails]
-		@SectionId = 22
-
-SELECT	'Return Value' = @return_value
-
-GO
-
+ sp_GetSectionDetails @SectionId = 22
 ```
+![image](https://github.com/metigator/EF-015/assets/87314838/0a38b3c4-f89c-414c-9940-9e98d48d86e8)
 
 ##### + Function InstructorAvailable
 
@@ -221,4 +211,5 @@ END
 ```sql
 SELECT dbo.fn_InstructorAvailability(1, '2023-08-01', '2023-08-15', '10:00:00', '14:00:00') AS AvailabilityStatus;
 ```
+![image](https://github.com/metigator/EF-015/assets/87314838/6228dc1c-f68f-4452-b445-060fde3317b7)
 
